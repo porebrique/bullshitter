@@ -1,0 +1,32 @@
+{
+  "name": "Bullshitter",
+  "version": "1.0.0",
+  "description": "Telegram bot able to response in crazy but usually relevant way",
+  "main": "index.js",
+  "dependencies": {
+    "express": "^4.14.0",
+    "lokijs": "^1.4.1",
+    "node-telegram-bot-api": "^0.24.0",
+    "request": "^2.75.0"
+  },
+  "devDependencies": {
+    "asserts": "^4.0.2",
+    "jasmine-focused": "^1.0.7",
+    "proxyquire": "^1.7.10",
+    "jasmine-node": "^1.14.5"
+  },
+  "scripts": {
+    "start": "node index",
+    "test": "jasmine-node spec --autotest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/porebrique/bot.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/porebrique/bot/issues"
+  },
+  "homepage": "https://github.com/porebrique/bot#readme"
+}

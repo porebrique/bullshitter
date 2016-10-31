@@ -26,6 +26,7 @@ function mergeSomethingFromArray(aStrings, word) {
 function mergeSomethingWith(input) {
   var matchesSet = Linguistics.getMatchesSet(input),
       extractedPhrases = extractStringsFromDBItems(matchesSet.matches).concat([input]);
+  // TODO: next line fails when matchesSet returns [] and undefined as word
   return mergeSomethingFromArray(extractedPhrases, matchesSet.word);
 }
 

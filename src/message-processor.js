@@ -25,13 +25,18 @@ MessageProcessor.prototype.processMessage = function (msg) {
 
 };
 
+// TODO consider avoiding ifs inside swtich.
+// Maybe commandProcessor should perform action itself and return only result?
 MessageProcessor.prototype.processCommand = function (msg) {
   var self = this,
       reactionToCommand =  self.commandProcessor.getReactionToCommand(msg);
 
   switch (typeof reactionToCommand) {
     case 'function':
-      reactionToCommand(msg);
+      var reactionResult = reactionToCommand(msg);
+      if (typeof reactionResult === 'string') {
+        self.sendMessage(msg.chat.id, reactionResult);
+      }
       break;
     case 'string':
       self.sendMessage(msg.chat.id, reactionToCommand);

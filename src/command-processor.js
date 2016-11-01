@@ -48,17 +48,29 @@ CommandProcessor.prototype.commandIsPermitted = function (commandName, userId) {
   return permissionGranted;
 };
 
-CommandProcessor.prototype.addPhrase= function (msg) {
+CommandProcessor.prototype.addPhrase = function (msg) {
   var textToBeSaved = msg.text.replace('/add', '').trim();
   if (textToBeSaved) {
     BullshitStorage.saveBullshit(textToBeSaved, true);
   }
 };
 
+// TODO: permissions
+CommandProcessor.prototype.showStats = function (msg) {
+  var origins = BullshitStorage.findBullshits({origin: true}),
+      bullshits = BullshitStorage.findBullshits({origin: false}),
+      message = 'DB now contains: \n' +
+        origins.length + ' source phrases \n' +
+        bullshits.length + ' generated phrases \n' +
+        (origins.length + bullshits.length) + ' total.';
+  return message;
+};
+
 CommandProcessor.prototype.getReactionMap = function () {
   var self = this;
   return {
     '/add': self.addPhrase,
+    '/stats': self.showStats,
     '/start': self.bot.settings.messages.hello
   };
 };

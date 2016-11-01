@@ -1,5 +1,6 @@
 var loki = require('lokijs'),
     utils = require('../utils/utils.js'),
+    Validate = require('./bullshit-storage.validation.js'),
     db = new loki('db.json');
 
 db.loadDatabase();
@@ -79,6 +80,18 @@ function saveBullshit(bullshit, isOrigin) {
 }
 
 /**
+ * Returns items under received conditions
+ * @param {Object} conditionsObject, {fieldName: requiredFieldValue}
+ * @returns {Array}
+ */
+function findBullshits(conditionsObject) {
+  Validate.findBullshits.input.apply(null, arguments);
+  var result = getBullshitCollection().find(conditionsObject);
+  Validate.findBullshits.output(result);
+  return result;
+}
+
+/**
  * Returns array of objects which text contains received word
  * (with some additional conditions)
  * @param {String} word
@@ -104,6 +117,7 @@ function getRandomBullshit() {
 
 
 module.exports = {
+  findBullshits: findBullshits,
   getRandomBullshit: getRandomBullshit,
   saveBullshit: saveBullshit,
   getBullshitsContainingWord: getBullshitsContainingWord

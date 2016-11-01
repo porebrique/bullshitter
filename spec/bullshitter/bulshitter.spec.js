@@ -29,6 +29,12 @@ var matchesSearchAnswers = {
       {text: 'One two three'},
       {text: 'four two five'}
     ]
+  },
+  "eleven": {
+    word: 'eleven',
+    matches: [
+      {text: 'Ten eleven twelve'}
+    ]
   }
 };
 
@@ -63,20 +69,22 @@ describe("Bullshitter's", function () {
       expect(mix).toBe('One two five');
     });
 
-    // TODO: fix test
-    xit('when only one match found, tries to mix it with some matches for this only match (keeping word from input)', function (){
-      var mix = bullshitter.getBullshit('one');
-      expect(mix).toBe('One two five');
+    describe('when only one match found, tries to mix it with some matches for this only match', function(){
+      it('and returns mix if it is possible', function (){
+        var mix = bullshitter.getBullshit('one');
+        expect(mix).toBe('One two five');
+      });
+
+      it('and returns just single match when it doesnt have common words with anything in DB', function (){
+        var mix = bullshitter.getBullshit('eleven');
+        expect(mix).toBe('Ten eleven twelve');
+      });
     });
 
-    // TODO: fix test
-    xit('returns random bullshit When input sentence has NO matches in db', function (){
+    it('returns random bullshit When input sentence has NO matches in db', function (){
       var mix = bullshitter.getBullshit('phrase that has no matches');
       expect(mix).toBe('Random result');
     });
-
-
-
 
   });
 

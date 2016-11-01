@@ -22,12 +22,16 @@ function mergeSomethingFromArray(aStrings, word) {
   return mergeablePair && Linguistics.mergePair(mergeablePair, word);
 }
 
-
+/**
+ * Tries to merge received phrase with some other from base.
+ * If phrase does not have any matches to stored items by any word
+ * @param input
+ * @returns {Number|Array.<T>|string|*|String}
+ */
 function mergeSomethingWith(input) {
   var matchesSet = Linguistics.getMatchesSet(input),
-      extractedPhrases = extractStringsFromDBItems(matchesSet.matches).concat([input]);
-  // TODO: next line fails when matchesSet returns [] and undefined as word
-  return mergeSomethingFromArray(extractedPhrases, matchesSet.word);
+      extractedPhrases = matchesSet.matches.length && extractStringsFromDBItems(matchesSet.matches).concat([input]);
+  return extractedPhrases && mergeSomethingFromArray(extractedPhrases, matchesSet.word) || null;
 }
 
 function getBullshit(input) {
@@ -40,8 +44,12 @@ function getBullshit(input) {
       bullshitToSay = mergeSomethingWith(BullshitStorage.getRandomBullshit());
       break;
     case 1:
-      bullshitToSay = mergeSomethingWith(matchesForInput.matches[0]);
-      if (bullshitToSay.indexOf(matchesForInput.word) !== -1) {
+      bullshitToSay = mergeSomethingWith(matchesForInput.matches[0].text);
+      if (!bullshitToSay) {
+        // If cant merge with anything (when phrase doesnt have shared words with any record from db) then get random
+        bullshitToSay = matchesForInput.matches[0].text;
+      } else if (bullshitToSay.indexOf(matchesForInput.word) !== -1) {
+        // if something was merged, save result, but only if it has something in common with input
         bullshitToSave = bullshitToSay;
       }
 

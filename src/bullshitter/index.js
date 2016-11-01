@@ -3,8 +3,16 @@ var utils = require('../utils/utils.js'),
     Linguistics = require('./linguistics.js'),
     BullshitStorage = require('./bullshit-storage.js');
 
+
+function removeWhitespacesBeforePunctuation(sString) {
+  return sString.replace(/(\s)([,.?!]+)/g, '$2');
+}
+function CapitalizeWholePhrase (sString) {
+  return sString.charAt(0).toUpperCase() + sString.slice(1);
+}
+
 function transformOutput(bullshitText) {
-  return bullshitText.charAt(0).toUpperCase() + bullshitText.slice(1);
+  return CapitalizeWholePhrase(removeWhitespacesBeforePunctuation(bullshitText));
 }
 
 /* ------------------------------------*/

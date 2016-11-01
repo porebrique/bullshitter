@@ -57,9 +57,10 @@ function getBullshitCollection() {
 /**
  * Saves to database the received text (if it is possible)
  * @param {String} bullshit
+ * @param {Boolean} [isOrigin] true if this is original phrase, not merged
  * @returns {boolean}
  */
-function saveBullshit(bullshit) {
+function saveBullshit(bullshit, isOrigin) {
   var wasSaved = false,
       collection = getBullshitCollection();
 
@@ -68,6 +69,7 @@ function saveBullshit(bullshit) {
       collection.remove(collection.data[0]);
     }
     collection.insert({
+      origin: !!isOrigin,
       text: bullshit
     });
     db.saveDatabase();

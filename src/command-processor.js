@@ -51,7 +51,7 @@ CommandProcessor.prototype.commandIsPermitted = function (commandName, userId) {
 CommandProcessor.prototype.addPhrase= function (msg) {
   var textToBeSaved = msg.text.replace('/add', '').trim();
   if (textToBeSaved) {
-    BullshitStorage.saveBullshit(textToBeSaved);
+    BullshitStorage.saveBullshit(textToBeSaved, true);
   }
 };
 

@@ -14,10 +14,6 @@ function getCommandName(text) {
   return commandName;
 }
 
-CommandProcessor.prototype.getReactionToUnsupportedCommand = function (msg) {
-  return this.bot.settings.messages.unknownCommand.replace('%command%',getCommandName(msg.text));
-};
-
 CommandProcessor.prototype.getReactionToCommand = function (msg) {
   var self = this,
       commandName = getCommandName(msg.text),
@@ -25,8 +21,6 @@ CommandProcessor.prototype.getReactionToCommand = function (msg) {
       result;
   if (knownCommand) {
     result = self.commandIsPermitted(commandName, msg.from.id) && knownCommand || null;
-  } else {
-    result = self.getReactionToUnsupportedCommand(msg)
   }
 
   return result;

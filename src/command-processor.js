@@ -1,4 +1,5 @@
-var BullshitStorage = require('./bullshitter/storage/bullshit-storage.js');
+var BullshitStorage = require('./bullshitter/storage/bullshit-storage.js'),
+    SuggestionStorage = require('./bullshitter/storage/suggestions.js');
 
 function CommandProcessor (bot) {
   this.bot = bot;
@@ -65,12 +66,44 @@ CommandProcessor.prototype.cleanupBase = function () {
   return bullshitsAmount + ' pieces of bullshit removed from DB. \n\n' + this.showStats();
 };
 
+
+CommandProcessor.prototype.suggest = function (msg) {
+  var url = extractURLFromSuggestion(msg.text),
+      result = SuggestionStorage.addSuggestion({
+        url: url,
+        user: msg.from
+      });
+  return this.bot.settings.messages.suggestions[result];
+};
+
+function extractURLFromSuggestion(text) {
+  var matches =  text.match(/^\/suggest\s+((?:http:\/\/|https:\/\/|www\.)\S+)/i),
+      url = matches && matches[1];
+  return url || null;
+}
+
+CommandProcessor.prototype.listSuggestions = function () {
+  return SuggestionStorage
+      .getSuggestions()
+      .reduce(function (sum, item) {
+        return sum + item.url + ', from ' + describeUser(item.user) + '\n';
+      }, '') || 'No suggestions yet';
+};
+
+function describeUser(user) {
+  var name = [].concat((user.first_name && [user.first_name]), (user.last_name && [user.last_name])).join(' '),
+      result = name + (user.username && [' (@', user.username, ')'].join('') || '');
+  return result;
+}
+
 CommandProcessor.prototype.getReactionMap = function () {
   var self = this;
   return {
     '/add': self.addPhrase,
     '/stats': self.showStats,
     '/heal': self.cleanupBase.bind(self),
+    '/suggest': self.suggest.bind(self),
+    '/suggestions': self.listSuggestions.bind(self),
     '/start': self.bot.settings.messages.hello
   };
 };

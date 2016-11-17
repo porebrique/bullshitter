@@ -1,9 +1,11 @@
 var loki = require('lokijs'),
     utils = require('../../utils/utils.js'),
     Validate = require('./bullshit-storage.validation.js'),
+    //db = require('./db');
     db = new loki('db.json');
 
 db.loadDatabase();
+
 
 const MAX_BULLSHIT_LENGTH = 1000,
   MAX_GENERATED_BULLSHIT_COLLECTION = 100;

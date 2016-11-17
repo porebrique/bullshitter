@@ -1,5 +1,5 @@
 var loki = require('lokijs'),
-    utils = require('../utils/utils.js'),
+    utils = require('../../utils/utils.js'),
     Validate = require('./bullshit-storage.validation.js'),
     db = new loki('db.json');
 

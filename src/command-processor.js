@@ -1,4 +1,4 @@
-var BullshitStorage = require('./bullshitter/bullshit-storage.js');
+var BullshitStorage = require('./bullshitter/storage/bullshit-storage.js');
 
 function CommandProcessor (bot) {
   this.bot = bot;

@@ -1,7 +1,7 @@
 
 var utils = require('../utils/utils.js'),
     Linguistics = require('./linguistics.js'),
-    BullshitStorage = require('./bullshit-storage.js');
+    BullshitStorage = require('./storage/bullshit-storage.js');
 
 
 function removeWhitespacesBeforePunctuation(sString) {

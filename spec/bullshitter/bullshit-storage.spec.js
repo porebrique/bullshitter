@@ -1,7 +1,7 @@
 var proxyquire =  require('proxyquire');
 var mocks = require('./mocks/bullshit-storage.mocks.js');
 
-var storage = proxyquire('../../src/bullshitter/bullshit-storage.js', {
+var storage = proxyquire('../../src/bullshitter/storage/bullshit-storage.js', {
   'lokijs': mocks.loki
 });
 

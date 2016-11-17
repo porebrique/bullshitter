@@ -51,7 +51,7 @@ var linguisticsMock = {
 
 var bullshitter = proxyquire('../../src/bullshitter/index.js', {
   './linguistics.js': linguisticsMock,
-  './bullshit-storage.js': storageMock
+  './storage/bullshit-storage.js': storageMock
 });
 
 // TODO: figure out how to refactor tests for using with real DB and de-comment

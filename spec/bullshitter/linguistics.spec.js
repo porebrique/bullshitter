@@ -22,7 +22,7 @@ var storageMock = {
 
 var Ling = proxyquire('../../src/bullshitter/linguistics.js', {
   '../utils/utils.js': utilsMock,
-  './bullshit-storage.js': storageMock
+  './storage/bullshit-storage.js': storageMock
 });
 
 describe('Linguistic module', function () {

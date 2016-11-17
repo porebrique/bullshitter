@@ -1,5 +1,5 @@
 var utils = require('../utils/utils.js');
-var storage = require('./bullshit-storage.js');
+var storage = require('./storage/bullshit-storage.js');
 var Assert = require('assert');
 
 var Validate = {

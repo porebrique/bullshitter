@@ -104,6 +104,7 @@ CommandProcessor.prototype.getReactionMap = function () {
     '/heal': self.cleanupBase.bind(self),
     '/suggest': self.suggest.bind(self),
     '/suggestions': self.listSuggestions.bind(self),
+    '/help': self.bot.settings.messages.hello,
     '/start': self.bot.settings.messages.hello
   };
 };

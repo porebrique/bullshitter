@@ -6,14 +6,14 @@ var loki = require('lokijs'),
 db.loadDatabase();
 
 const MAX_BULLSHIT_LENGTH = 1000,
-      MAX_BULLSHIT_COLLECTION = 100;
+  MAX_GENERATED_BULLSHIT_COLLECTION = 100;
 
 /**
  * Checks if collection is not more than maxumim size set
  * @returns {boolean}
  */
 function collectionIsFull() {
-  return getBullshitCollection().data.length >= MAX_BULLSHIT_COLLECTION;
+  return getGeneratedBullshitsCollection().length >= MAX_GENERATED_BULLSHIT_COLLECTION;
 }
 
 /**
@@ -66,8 +66,8 @@ function saveBullshit(bullshit, isOrigin) {
       collection = getBullshitCollection();
 
   if (bullshitIsValid(bullshit)) {
-    if(collectionIsFull()) {
-      collection.remove(collection.data[0]);
+    if(!isOrigin && collectionIsFull()) {
+      collection.remove(utils.getRandomArrayElement(getGeneratedBullshitsCollection()));
     }
     collection.insert({
       origin: !!isOrigin,
@@ -77,6 +77,18 @@ function saveBullshit(bullshit, isOrigin) {
     wasSaved = true;
   }
   return wasSaved;
+}
+
+/**
+ * Removes generated phrases, leaving original ones intact
+ */
+function cleanup() {
+  getBullshitCollection().removeWhere({origin: false});
+  db.saveDatabase();
+}
+
+function getGeneratedBullshitsCollection() {
+  return getBullshitCollection().find({origin: false});
 }
 
 /**
@@ -117,6 +129,7 @@ function getRandomBullshit() {
 
 
 module.exports = {
+  cleanup: cleanup,
   findBullshits: findBullshits,
   getRandomBullshit: getRandomBullshit,
   saveBullshit: saveBullshit,

@@ -49,8 +49,7 @@ CommandProcessor.prototype.addPhrase = function (msg) {
   }
 };
 
-// TODO: permissions
-CommandProcessor.prototype.showStats = function (msg) {
+CommandProcessor.prototype.showStats = function () {
   var origins = BullshitStorage.findBullshits({origin: true}),
       bullshits = BullshitStorage.findBullshits({origin: false}),
       message = 'DB now contains: \n' +
@@ -60,11 +59,18 @@ CommandProcessor.prototype.showStats = function (msg) {
   return message;
 };
 
+CommandProcessor.prototype.cleanupBase = function () {
+  var bullshitsAmount = BullshitStorage.findBullshits({origin: false}).length;
+  BullshitStorage.cleanup();
+  return bullshitsAmount + ' pieces of bullshit removed from DB. \n\n' + this.showStats();
+};
+
 CommandProcessor.prototype.getReactionMap = function () {
   var self = this;
   return {
     '/add': self.addPhrase,
     '/stats': self.showStats,
+    '/heal': self.cleanupBase.bind(self),
     '/start': self.bot.settings.messages.hello
   };
 };

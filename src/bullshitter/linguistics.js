@@ -51,7 +51,7 @@ function getDecomposedString(inputText) {
 
 /* ----------------------------------------------- */
 
-//TODO: possibly exclude words surrounded by quotes, braces, as they are difficult to merge by
+//TODO: search must not be performed for words inside (), "", [], «», etc, in BOTH phrases (now it is done for DB phrases only)
 //TODO: consider creating getResponseToOneWord, with searching by "word", then "wor", then "wo" etc
 // Actually it could be always useful since search is performed by single word at some stage.
 // But it cant be used blindly, simple reducing number of letters, as it could lead to senseless matches
@@ -69,10 +69,12 @@ function getMatchesSet(input, excludes) {
       result;
 
   if (randomWord) {
-    foundMatches = storage.getBullshitsContainingWord(randomWord);
-    if (excludes) {
-      foundMatches = ensureUniqueness(foundMatches, excludes);
-    }
+    foundMatches = storage
+      .getBullshitsContainingWord(randomWord)
+      .filter(function(item) {
+        return !excludes || excludes.indexOf(item.text) === -1;
+      });
+      foundMatches = filterSearchResults(foundMatches, randomWord);
 
     switch (foundMatches.length) {
       case 0:
@@ -97,10 +99,46 @@ function getMatchesSet(input, excludes) {
 
 }
 
-function ensureUniqueness(matchesSet, excludes) {
-    return matchesSet.filter(function(item) {
-      return excludes.indexOf(item.text) === -1;
-    });
+/**
+ * Checks if given word is no surrounded by symbols that make impossible breaking phrase by this word.
+ * @param {String} bullshit
+ * @param {String} word
+ * @returns {Bool}
+ */
+function bullshitIsAppropriateForMerging(bullshit, word) {
+  return [
+    ['\"', '\"'],
+    ['\\(', '\\)'],
+    ["\'", "\'"],
+    ['\\[', '\\]'],
+    ['«', '»']
+  ].reduce(function (result, symbolsPair) {
+    var regexp = new RegExp(symbolsPair[0] + '.*(' + word + ').*' + symbolsPair[1], 'gi'),
+        localMatch = !!bullshit.match(regexp);
+    return result && !localMatch;
+  }, true);
+}
+
+function filterSearchResults(matches, word) {
+  return ensureUniqueness(matches).filter(function (item) {
+    return bullshitIsAppropriateForMerging(item.text, word);
+  });
+}
+
+/**
+ * Excludes items with duplicate "text" field, leaving only one of them
+ * @param {Array} matchesSet
+ * @returns {Array}
+ */
+function ensureUniqueness(matchesSet) {
+  var excludes = [];
+  return matchesSet.filter(function(item) {
+    var itemIsUnique = excludes.indexOf(item.text) === -1;
+    if (itemIsUnique) {
+      excludes.push(item.text);
+    }
+    return itemIsUnique;
+  });
 }
 
 /* ------------- Search for mergeable pair --------------   */
@@ -174,6 +212,7 @@ function mergePhrases(input, sharedWord) {
 /*----------------------------------------------   */
 
 module.exports = {
+  filterSearchResults: filterSearchResults,
   mergePair: mergePhrases,
   getPairToMerge: getPairToMerge,
   getMatchesSet: getMatchesSet,

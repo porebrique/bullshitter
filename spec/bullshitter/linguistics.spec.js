@@ -12,7 +12,7 @@ var storageMock = {
         strings.forEach(function(item){
           if (word && item.search(new RegExp(word, 'gi')) !== -1) {
             //console.log('MATCH for', word, item);
-            result.push(item);
+            result.push({text: item});
           }
         });
         return result;
@@ -29,7 +29,7 @@ describe('Linguistic module', function () {
 
   describe('getMatchesSet() method returns correct matches set', function (){
 
-    it('when there are mnatches', function () {
+    it('when there are matches', function () {
       var result = Ling.getMatchesSet('zero Two eleven');
       expect(result.matches.length).toBe(2);
       expect(result.word).toBe('two');
@@ -46,6 +46,24 @@ describe('Linguistic module', function () {
     });
 
 
+  });
+
+  describe('search results', function() {
+    var searchResults = [
+      {text: 'One two three'},
+      {text: 'One two three'},
+      {text: 'One "two" three'},
+      {text: 'One " two " three'},
+      {text: 'One (two three)'},
+      {text: 'One (three two )'},
+      {text: 'One [two] three'},
+      {text: 'One «two» three'}
+    ];
+
+    it('dont include phrases when common word is surrounded by some symbols like quotes', function () {
+      var filteredResults = Ling.filterSearchResults(searchResults, [], 'two');
+      expect(filteredResults.length).toBe(1);
+    });
   });
 
   describe('getDecomposedString() method', function (){

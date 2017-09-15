@@ -1,8 +1,8 @@
 var loki = require('lokijs'),
-    utils = require('../../utils/utils.js'),
-    Validate = require('./bullshit-storage.validation.js'),
-    //db = require('./db');
-    db = new loki('db.json');
+  utils = require('../../utils/utils.js'),
+  settings = require('../../../settings.js'),
+  Validate = require('./bullshit-storage.validation.js'),
+  db = new loki('db.json');
 
 db.loadDatabase();
 
@@ -25,7 +25,7 @@ function collectionIsFull() {
  */
 function bullshitIsUnique(bullshit) {
   var coll = getBullshitCollection(),
-      sameBullshit = coll.find({text: bullshit});
+    sameBullshit = coll.find({text: bullshit});
   return sameBullshit.length === 0;
 }
 
@@ -38,13 +38,32 @@ function bullshitIsShortEnough(bullshit) {
   return bullshit.length < MAX_BULLSHIT_LENGTH;
 }
 
+function isValidByStopword(bullshit, stopWord, maxNumber) {
+  var regexp = new RegExp(stopWord, 'ig');
+  var matches = bullshit.match(regexp);
+  return !matches || matches.length <= maxNumber;
+}
+
+function hasBullshitNotTooMuchStopwords(bullshit) {
+  return settings.stopWords.reduce(function (isBullshitCurrentlyValid, stopWordConfig) {
+    if (isBullshitCurrentlyValid) {
+      var stopWord = stopWordConfig[0];
+      var maxNumber = stopWordConfig[1];
+      isBullshitCurrentlyValid = isValidByStopword(bullshit, stopWord, maxNumber);
+    }
+    return isBullshitCurrentlyValid;
+  }, true);
+}
+
+
 /**
  * Performs two checks for text: uniqueness and length
  * @param {String} bullshit
  * @returns {boolean}
  */
-function bullshitIsValid(bullshit) {
-  return bullshitIsShortEnough(bullshit) && bullshitIsUnique(bullshit);
+function bullshitIsValid(bullshit, isOrigin) {
+  var isValidByStopwords = isOrigin || hasBullshitNotTooMuchStopwords(bullshit);
+  return bullshitIsShortEnough(bullshit) && isValidByStopwords && bullshitIsUnique(bullshit);
 }
 
 /* ----------------------- */
@@ -65,9 +84,9 @@ function getBullshitCollection() {
  */
 function saveBullshit(bullshit, isOrigin) {
   var wasSaved = false,
-      collection = getBullshitCollection();
+    collection = getBullshitCollection();
 
-  if (bullshitIsValid(bullshit)) {
+  if (bullshitIsValid(bullshit, isOrigin)) {
     if(!isOrigin && collectionIsFull()) {
       collection.remove(utils.getRandomArrayElement(getGeneratedBullshitsCollection()));
     }
@@ -115,8 +134,8 @@ function getBullshitsContainingWord(word) {
   // TODO: make sure about word searching details.
   // Consider searching "word" and "word, ..." to more contextual search
   var coll = getBullshitCollection(),
-      clearedWord = word.replace(/\(\)\[\]/, ''),
-      regexpText = "(.*[\\s-,]|^)"+ clearedWord + "([\\s,-].*|$)";
+    clearedWord = word.replace(/\(\)\[\]/, ''),
+    regexpText = "(.*[\\s-,]|^)"+ clearedWord + "([\\s,-].*|$)";
   return coll.find({'text': {'$regex': [regexpText, 'i']}});
 }
 

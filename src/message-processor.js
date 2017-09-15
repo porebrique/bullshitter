@@ -88,9 +88,18 @@ MessageProcessor.prototype.isSaidToBot = function(messageText) {
  return messageIsForBot;
 };
 
+MessageProcessor.prototype.isTimeToSayRandomly = function () {
+  var chance = settings.randomPhraseChance || 0;
+  var random = Math.floor(Math.random() * 100);
+  return chance > random;
+};
+
 MessageProcessor.prototype.processGeneralMessage = function (msg) {
   var self = this,
-      resultMessage = (self.isSaidToBot(msg.text) && self.sayRandomShit(msg));
+      isSaidToBot = self.isSaidToBot(msg.text),
+      isTimeToSayRandomly = self.isTimeToSayRandomly(),
+      resultMessage = (isSaidToBot || isTimeToSayRandomly ) && self.sayRandomShit(msg);
+
   if (resultMessage) {
     self.sendMessage(msg.chat.id, resultMessage);
   }

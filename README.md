@@ -32,6 +32,8 @@ module.exports = {
      ],
      read: []
    },
+   // Chance of replying to a message not addressed to bot, in percents
+   randomPhraseChance: 5,
    stopWords: [
     // If bot generates a phrase including any of listed words more than max number of times,
     // it will be sayed, but not stored in DB

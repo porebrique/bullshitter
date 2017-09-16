@@ -16,7 +16,7 @@
 
 ### How bullshitter works
 
-Bot is a node.js application. You just configure it (see below), create fb.json in root folder and run it with npm start.
+Bot is a node.js application. You just configure it (see below), create db.json in root folder and run it with npm start.
 
 ### Settings file structure
 
@@ -42,8 +42,18 @@ module.exports = {
    protectedCommands: {
      '/secret_statistics': ['read']
      '/jump': ['write']
-   }
- };
+   },
+ messages: {
+    hello: 'message sended as a reply to /start'
+    suggestions: {
+      saved: 'reaction to successfully saved suggestion',
+      duplicate: 'reaction to a suggestion already existing is DB',
+      long: 'suggestion is too long',
+      wrong: 'wrong suggestion formst (basically, not a link)',
+      full: 'when suggestions queue is too long'
+    }
+ }
+};
 ```
 
  

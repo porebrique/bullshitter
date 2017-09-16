@@ -1,34 +1,18 @@
+import Linguistics from './linguistics';
+import BullshitStorage from './storage/bullshit-storage';
 
-var utils = require('../utils/utils.js'),
-    Linguistics = require('./linguistics.js'),
-    BullshitStorage = require('./storage/bullshit-storage.js');
-
-
-function removeWhitespacesBeforePunctuation(sString) {
-  return sString.replace(/(\s)([,.?!]+)/g, '$2');
-}
-function CapitalizeWholePhrase (sString) {
-  return sString.charAt(0).toUpperCase() + sString.slice(1);
-}
-
-function transformOutput(bullshitText) {
-  return CapitalizeWholePhrase(removeWhitespacesBeforePunctuation(bullshitText));
-}
+const removeWhitespacesBeforePunctuation = sString => sString.replace(/(\s)([,.?!]+)/g, '$2');
+const CapitalizeWholePhrase = sString => sString.charAt(0).toUpperCase() + sString.slice(1);
+const transformOutput = bullshitText => CapitalizeWholePhrase(removeWhitespacesBeforePunctuation(bullshitText));
 
 /* ------------------------------------*/
 
-function extractStringsFromDBItems (input) {
-  var result = input.map(function (item){
-    return item.text;
+const extractStringsFromDBItems = input => input.map(item => item.text);
 
-  });
-  return result;
-}
-
-function mergeSomethingFromArray(aStrings, word) {
-  var mergeablePair = Linguistics.getPairToMerge(aStrings, word);
+const mergeSomethingFromArray = (aStrings, word) => {
+  const mergeablePair = Linguistics.getPairToMerge(aStrings, word);
   return mergeablePair && Linguistics.mergePair(mergeablePair, word);
-}
+};
 
 /**
  * Tries to merge received phrase with some other from base.
@@ -36,16 +20,16 @@ function mergeSomethingFromArray(aStrings, word) {
  * @param input
  * @returns {Number|Array.<T>|string|*|String}
  */
-function mergeSomethingWith(input) {
-  var matchesSet = Linguistics.getMatchesSet(input),
-      extractedPhrases = matchesSet.matches.length && extractStringsFromDBItems(matchesSet.matches).concat([input]);
+const mergeSomethingWith = input => {
+  const matchesSet = Linguistics.getMatchesSet(input);
+  const extractedPhrases = matchesSet.matches.length && extractStringsFromDBItems(matchesSet.matches).concat([input]);
   return extractedPhrases && mergeSomethingFromArray(extractedPhrases, matchesSet.word) || null;
-}
+};
 
-function getBullshit(input) {
-  var matchesForInput = Linguistics.getMatchesSet(input), // could be 0, 1 or many
-      bullshitToSave,
-      bullshitToSay;
+const getBullshit = input => {
+  const matchesForInput = Linguistics.getMatchesSet(input); // could be 0, 1 or many
+  let bullshitToSave;
+  let bullshitToSay;
 
   switch (matchesForInput.matches.length) {
     case 0:
@@ -63,7 +47,7 @@ function getBullshit(input) {
 
       break;
     default:
-      var extractedPhrases = extractStringsFromDBItems(matchesForInput.matches);
+      const extractedPhrases = extractStringsFromDBItems(matchesForInput.matches);
       bullshitToSay = bullshitToSave = mergeSomethingFromArray(extractedPhrases, matchesForInput.word);
       break;
   }
@@ -73,12 +57,7 @@ function getBullshit(input) {
   }
 
   return transformOutput(bullshitToSay || BullshitStorage.getRandomBullshit());
-}
-
-
-
-
-
-module.exports =  {
-  getBullshit: getBullshit
 };
+
+const bullshitter = { getBullshit };
+export default bullshitter;

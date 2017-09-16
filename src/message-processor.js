@@ -106,4 +106,4 @@ MessageProcessor.prototype.processGeneralMessage = function (msg) {
 
 };
 
-module.exports = MessageProcessor;
+export default MessageProcessor;

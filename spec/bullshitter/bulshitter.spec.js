@@ -1,4 +1,7 @@
-var proxyquire =  require('proxyquire');
+import bullshitter from '../../src/bullshitter/index';
+import { Mocker } from '../helpers';
+import Ling from '../../src/bullshitter/linguistics';
+import BullshitStorage from '../../src/bullshitter/storage/bullshit-storage';
 
 var storageMock = {
   saveBullshit: function (text) {
@@ -48,14 +51,21 @@ var linguisticsMock = {
   }
 };
 
-
-var bullshitter = proxyquire('../../src/bullshitter/index.js', {
-  './linguistics.js': linguisticsMock,
-  './storage/bullshit-storage.js': storageMock
-});
-
 // TODO: figure out how to refactor tests for using with real DB and de-comment
 describe("Bullshitter's", function () {
+
+  let storageMocker;
+  let linguisticsMocker;
+
+  beforeEach(() => {
+    storageMocker = new Mocker(BullshitStorage, storageMock);
+    linguisticsMocker = new Mocker(Ling, linguisticsMock);
+  });
+
+  afterEach(() => {
+    storageMocker.restore();
+    linguisticsMocker.restore();
+  });
 
 
   describe('(getBullshit) method', function (){

@@ -12,16 +12,19 @@
   "devDependencies": {
     "asserts": "^4.0.2",
     "babel-cli": "^6.26.0",
+    "babel-jest": "^21.2.0",
+    "babel-plugin-transform-class-properties": "^6.24.1",
+    "babel-plugin-transform-es2015-destructuring": "^6.23.0",
+    "babel-plugin-transform-object-rest-spread": "^6.26.0",
     "babel-preset-es2015": "^6.24.1",
-    "jasmine-focused": "^1.0.7",
-    "jasmine-node": "^1.14.5",
-    "proxyquire": "^1.7.10",
+    "jest": "^21.2.1",
     "rimraf": "^2.6.2"
   },
   "scripts": {
     "build": "rimraf dist/ && babel ./ --out-dir dist/ --ignore ./node_modules,./.babelrc,./package.json,./npm-debug.log --copy-files",
     "start": "npm run build && node dist/index.js",
-    "test": "jasmine-node spec --autotest --color"
+    "test": "jest --config jest.json",
+    "test:coverage": "npm test -- --coverage"
   },
   "repository": {
     "type": "git",

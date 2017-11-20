@@ -1,0 +1,21 @@
+{
+  "collectCoverageFrom": [
+    "src/**/*.js"
+  ],
+  "moduleFileExtensions": [
+    "js",
+    "jsx"
+  ],
+  "coverageReporters": ["lcov"],
+  "modulePathIgnorePatterns": [
+    ".config.js"
+  ],
+  "setupFiles": [
+  ],
+  "roots": [
+    "<rootDir>/spec"
+  ],
+  "verbose": true,
+  "globals": {
+  }
+}

@@ -1,12 +1,21 @@
-var proxyquire =  require('proxyquire');
-var MPConstructor = proxyquire('../src/message-processor', {
-  '../settings.js': {
-    names: ['botname', 'otherbotname']
-  }
-});
+import MPConstructor from '../src/message-processor';
+import settings from '../settings';
+import { Mocker } from './helpers';
 
+const settingsMock = {
+  names: ['botname', 'otherbotname']
+};
 
 describe('MessageProcessor', function (){
+  let settingsMocker;
+
+  beforeEach(() => {
+    settingsMocker = new Mocker(settings, settingsMock);
+  });
+
+  afterEach(() => {
+    settingsMocker.restore();
+  });
 
   var bot = {};
 

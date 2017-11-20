@@ -1,5 +1,8 @@
-var utilsMock = require('../../src/utils/utils.mock');
-var proxyquire =  require('proxyquire');
+import storage from '../../src/bullshitter/storage/bullshit-storage';
+import utils from '../../src/utils/utils.js';
+import utilsMock from '../../src/utils/utils.mock';
+import Ling from '../../src/bullshitter/linguistics';
+import { Mocker } from '../helpers';
 
 var storageMock = {
       getBullshitsContainingWord: function (word) {
@@ -11,7 +14,6 @@ var storageMock = {
 
         strings.forEach(function(item){
           if (word && item.search(new RegExp(word, 'gi')) !== -1) {
-            //console.log('MATCH for', word, item);
             result.push({text: item});
           }
         });
@@ -19,13 +21,19 @@ var storageMock = {
       }
     };
 
-
-var Ling = proxyquire('../../src/bullshitter/linguistics.js', {
-  '../utils/utils.js': utilsMock,
-  './storage/bullshit-storage.js': storageMock
-});
-
 describe('Linguistic module', function () {
+  let storageMocker;
+  let utilsMocker;
+
+  beforeEach(() => {
+    storageMocker = new Mocker(storage, storageMock);
+    utilsMocker = new Mocker(utils, utilsMock);
+  });
+
+  afterEach(() => {
+    storageMocker.restore();
+    utilsMocker.restore();
+  });
 
   describe('getMatchesSet() method returns correct matches set', function (){
 

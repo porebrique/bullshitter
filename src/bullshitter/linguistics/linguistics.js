@@ -1,35 +1,6 @@
-var utils = require('../utils/utils.js');
-var storage = require('./storage/bullshit-storage.js');
-var Assert = require('assert');
-
-var Validate = {
-  mergePhrases: {
-    input: function (input, sharedWord){
-      Assert(Array.isArray(input));
-      Assert(typeof input[0] === 'string');
-      Assert(typeof input[1] === 'string');
-      Assert(typeof sharedWord === 'string');
-
-      var sharedWordRegexp = new RegExp(sharedWord, 'i');
-      Assert(input[0].match(sharedWordRegexp));
-      Assert(input[1].match(sharedWordRegexp));
-
-    },
-    output: function (output) {
-      Assert(typeof output === 'string')
-    }
-  },
-
-  phraseCanBeLeftHalf: {
-    input: function (phrase, word) {
-      Assert(typeof phrase === "string"); // fails sometime
-      Assert(typeof word === "string")
-    },
-    output: function (result) {
-      Assert(typeof result === 'boolean');
-    }
-  }
-};
+import utils from '../../utils/utils';
+import storage from '../storage/bullshit-storage.js';
+import Validate from './validations';
 
 /* ----------------------------------------------- */
 
@@ -39,15 +10,13 @@ var Validate = {
  * @param {String} inputText
  * @returns {Array}
  */
-function getDecomposedString(inputText) {
-  var result = inputText
-        .toLowerCase()
-        .replace(/[,.?!'"«»]/gi, '')
-        .replace(/\s+/gi, ' ')
-        .split(' ');
-  // TODO: extract root if possible
-  return result;
-}
+const getDecomposedString = inputText => {
+  return inputText
+    .toLowerCase()
+    .replace(/[,.?!'"«»]/gi, '')
+    .replace(/\s+/gi, ' ')
+    .split(' ');
+};
 
 /* ----------------------------------------------- */
 
@@ -61,17 +30,17 @@ function getDecomposedString(inputText) {
  * @param {String | Array} input
  * @returns {{matches: Array, word: String}}
  */
-function getMatchesSet(input, excludes) {
-  var decomposedInput = typeof input === 'string' ? getDecomposedString(input) : input,
-      excludes = typeof input === 'string' ? [input] : excludes,
-      randomWord = utils.getRandomArrayElement(decomposedInput),
-      foundMatches,
-      result;
+const getMatchesSet = (input, initialExcludes) => {
+  const decomposedInput = typeof input === 'string' ? getDecomposedString(input) : input;
+  const excludes = typeof input === 'string' ? [input] : initialExcludes;
+  const randomWord = utils.getRandomArrayElement(decomposedInput);
+  let foundMatches;
+  let result;
 
   if (randomWord) {
     foundMatches = storage
       .getBullshitsContainingWord(randomWord)
-      .filter(function(item) {
+      .filter(item => {
         return !excludes || excludes.indexOf(item.text) === -1;
       });
       foundMatches = filterSearchResults(foundMatches, randomWord);
@@ -97,7 +66,7 @@ function getMatchesSet(input, excludes) {
     matches: foundMatches || []
   };
 
-}
+};
 
 /**
  * Checks if given word is no surrounded by symbols that make impossible breaking phrase by this word.
@@ -105,81 +74,81 @@ function getMatchesSet(input, excludes) {
  * @param {String} word
  * @returns {Bool}
  */
-function bullshitIsAppropriateForMerging(bullshit, word) {
+const bullshitIsAppropriateForMerging = (bullshit, word) => {
   return [
     ['\"', '\"'],
     ['\\(', '\\)'],
     ["\'", "\'"],
     ['\\[', '\\]'],
     ['«', '»']
-  ].reduce(function (result, symbolsPair) {
-    var regexp = new RegExp(symbolsPair[0] + '.*(' + word + ').*' + symbolsPair[1], 'gi'),
-        localMatch = !!bullshit.match(regexp);
+  ].reduce((result, symbolsPair) => {
+    const regexp = new RegExp(symbolsPair[0] + '.*(' + word + ').*' + symbolsPair[1], 'gi');
+    const localMatch = !!bullshit.match(regexp);
     return result && !localMatch;
   }, true);
-}
+};
 
-function filterSearchResults(matches, word) {
-  return ensureUniqueness(matches).filter(function (item) {
+const filterSearchResults = (matches, word) => {
+  return ensureUniqueness(matches).filter(item => {
     return bullshitIsAppropriateForMerging(item.text, word);
   });
-}
+};
 
 /**
  * Excludes items with duplicate "text" field, leaving only one of them
  * @param {Array} matchesSet
  * @returns {Array}
  */
-function ensureUniqueness(matchesSet) {
-  var excludes = [];
-  return matchesSet.filter(function(item) {
-    var itemIsUnique = excludes.indexOf(item.text) === -1;
+const ensureUniqueness = matchesSet => {
+  const excludes = [];
+  return matchesSet.filter(item => {
+    const itemIsUnique = excludes.indexOf(item.text) === -1;
     if (itemIsUnique) {
       excludes.push(item.text);
     }
     return itemIsUnique;
   });
-}
+};
 
 /* ------------- Search for mergeable pair --------------   */
-function phraseCanBeLeftHalf(phrase, word) {
-  Validate.phraseCanBeLeftHalf.input.apply(null, arguments);
-  var regexp = new RegExp('^' + word, 'gi'),  //sure about g?
+const phraseCanBeLeftHalf = (phrase, word) => {
+  Validate.phraseCanBeLeftHalf.input(phrase, word);
+  const regexp = new RegExp('^' + word, 'gi'),  //sure about g?
       result = !phrase.match(regexp);
   Validate.phraseCanBeLeftHalf.output(result);
   return result;
-}
+};
 
-function phraseCanBeRightHalf(phrase, word) {
-  var regexp = new RegExp(word + '[.!?]*$', 'gi');  //sure about g?
+const phraseCanBeRightHalf = (phrase, word) => {
+  const regexp = new RegExp(word + '[.!?]*$', 'gi');  //sure about g?
   return !phrase.match(regexp);
-}
+};
 
-function getLeftSentence(variants, word, excludedVariants) {
-  var result = utils.getRandomArrayElement(variants, excludedVariants);
+const getLeftSentence = (variants, word, excludedVariants) => {
+  let result = utils.getRandomArrayElement(variants, excludedVariants);
   if (result && !phraseCanBeLeftHalf(result, word)) {
       excludedVariants = excludedVariants ? excludedVariants : [];
       excludedVariants.push(result);
       result = getLeftSentence(variants, word, excludedVariants);
   }
   return result || null;
-}
+};
 
-function getRightSentence(variants, word, excludedVariants) {
-  var result = utils.getRandomArrayElement(variants, excludedVariants);
+const getRightSentence =(variants, word, excludedVariants) => {
+  let result = utils.getRandomArrayElement(variants, excludedVariants);
   if (result && !phraseCanBeRightHalf(result, word)) {
     excludedVariants = excludedVariants ? excludedVariants : [];
     excludedVariants.push(result);
     result = getRightSentence(variants, word, excludedVariants);
   }
   return result;
-}
+};
 
-function getPairToMerge(phrasesArray, word) {
-  var leftSentence = getLeftSentence(phrasesArray, word),
-      rightSentence = leftSentence && getRightSentence(phrasesArray, word, [leftSentence]);
+const getPairToMerge = (phrasesArray, word) => {
+  const leftSentence = getLeftSentence(phrasesArray, word);
+  const rightSentence = leftSentence && getRightSentence(phrasesArray, word, [leftSentence]);
   return (rightSentence && [leftSentence, rightSentence]) || null;
-}
+};
 
 /* ---------------------------------------------   */
 
@@ -192,22 +161,22 @@ function getPairToMerge(phrasesArray, word) {
  * @param {String} sharedWord
  * @returns {String}
  */
-function mergePhrases(input, sharedWord) {
-  Validate.mergePhrases.input.apply(null, arguments);
-  var leftHalfRegexp = new RegExp('^.*[\\s-]' + sharedWord, 'i'),
-      rightHalfRegexp = new RegExp('(\\s|^)' + sharedWord + '[\\s\\.,!?]+[\\S\\s]*$', 'i'),
-      wordReplacementRegexp = new RegExp(sharedWord, 'i'),
+const mergePhrases = (input, sharedWord) => {
+  Validate.mergePhrases.input(input, sharedWord);
+  const leftHalfRegexp = new RegExp('^.*[\\s-]' + sharedWord, 'i');
+  const rightHalfRegexp = new RegExp('(\\s|^)' + sharedWord + '[\\s\\.,!?]+[\\S\\s]*$', 'i');
+  const wordReplacementRegexp = new RegExp(sharedWord, 'i');
   // take part of first phrases from beginning to shared word (including)
-    resultStart = input[0].match(leftHalfRegexp)[0],
+  const resultStart = input[0].match(leftHalfRegexp)[0];
   // take part of second phrase from shared word to the end. Then remove shared word (it is in 1st phrase)
-    resultEnd = input[1]
+  const resultEnd = input[1]
       .match(rightHalfRegexp)[0]
       .trim()
-      .replace(wordReplacementRegexp, ''),
-    result = resultStart + resultEnd;
+      .replace(wordReplacementRegexp, '');
+  const result = resultStart + resultEnd;
   Validate.mergePhrases.output(result);
   return result;
-}
+};
 
 /*----------------------------------------------   */
 

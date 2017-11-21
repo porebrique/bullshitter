@@ -40,11 +40,11 @@ module.exports = {
     ['wordYouDontLike', 2]
    ],
    protectedCommands: {
-     '/secret_statistics': ['read']
+     '/secret_statistics': ['read'],
      '/jump': ['write']
    },
  messages: {
-    hello: 'message sended as a reply to /start'
+    hello: 'message sended as a reply to /start',
     suggestions: {
       saved: 'reaction to successfully saved suggestion',
       duplicate: 'reaction to a suggestion already existing is DB',

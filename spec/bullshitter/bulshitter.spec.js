@@ -1,4 +1,4 @@
-import bullshitter from '../../src/bullshitter/index';
+import * as bullshitter from '../../src/bullshitter/bullshitter';
 import { Mocker } from '../helpers';
 import Ling from '../../src/bullshitter/linguistics';
 import BullshitStorage from '../../src/bullshitter/storage/bullshit-storage';

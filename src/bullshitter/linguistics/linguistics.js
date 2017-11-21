@@ -1,3 +1,4 @@
+import * as lodash from 'lodash';
 import utils from '../../utils/utils';
 import storage from '../storage/bullshit-storage.js';
 import Validate from './validations';
@@ -30,33 +31,33 @@ const getDecomposedString = inputText => {
  * @param {String | Array} input
  * @returns {{matches: Array, word: String}}
  */
-const getMatchesSet = (input, initialExcludes) => {
-  const decomposedInput = typeof input === 'string' ? getDecomposedString(input) : input;
-  const excludes = typeof input === 'string' ? [input] : initialExcludes;
+const getMatchesSet = (input, initialExcludes = []) => {
+  // this method can be called recursively.
+  // To avoid unneeded operations, all manipulations over arguments can be done once,
+  // and then results are passed as arguments for recursive call.
+  // TODO: not sure if this optimization makes sense.
+  // TODO consider changing signature to get obvious recursive flag. NB: isnt'it called from somewhere with not a string arg?
+  const isInitialCall = lodash.isString(input);
+  const decomposedInput = isInitialCall ? getDecomposedString(input) : input;
+  const excludes = isInitialCall ? [input] : initialExcludes;
   const randomWord = utils.getRandomArrayElement(decomposedInput);
   let foundMatches;
   let result;
 
   if (randomWord) {
-    foundMatches = storage
-      .getBullshitsContainingWord(randomWord)
-      .filter(item => {
-        return !excludes || excludes.indexOf(item.text) === -1;
-      });
-      foundMatches = filterSearchResults(foundMatches, randomWord);
+    foundMatches = storage.getBullshitsContainingWord(randomWord);
+    foundMatches = filterSearchResults(foundMatches, randomWord, excludes);
 
     switch (foundMatches.length) {
       case 0:
         // when no matches found, try again with reduced word set
-        decomposedInput.splice(decomposedInput.indexOf(randomWord), 1);
-        result = getMatchesSet(decomposedInput, excludes);
+        const reducedDecomposedInput = lodash.without(decomposedInput, randomWord);
+        result = getMatchesSet(reducedDecomposedInput, excludes);
         break;
       case 1:
         // TODO: backup result and try again another word instead of simple returning single match
-        //console.log('found single match:', result.matches[0]);
         break;
       default:
-        //console.log('found 2 or more matches');
         break;
     }
   }
@@ -75,46 +76,40 @@ const getMatchesSet = (input, initialExcludes) => {
  * @returns {Bool}
  */
 const bullshitIsAppropriateForMerging = (bullshit, word) => {
-  return [
+  const enclosingSymbols = [
     ['\"', '\"'],
     ['\\(', '\\)'],
     ["\'", "\'"],
     ['\\[', '\\]'],
     ['«', '»']
-  ].reduce((result, symbolsPair) => {
-    const regexp = new RegExp(symbolsPair[0] + '.*(' + word + ').*' + symbolsPair[1], 'gi');
+  ];
+  // TODO: change to filtering the array and checking its length. Could be simpler
+  // TODO: dont do this without tests
+  return enclosingSymbols.reduce((result, symbolsPair) => {
+    const [ openingSymbol, closingSymbol ] = symbolsPair;
+    const regexp = new RegExp(openingSymbol + '.*(' + word + ').*' + closingSymbol, 'gi');
     const localMatch = !!bullshit.match(regexp);
     return result && !localMatch;
   }, true);
 };
 
-const filterSearchResults = (matches, word) => {
-  return ensureUniqueness(matches).filter(item => {
-    return bullshitIsAppropriateForMerging(item.text, word);
-  });
-};
-
-/**
- * Excludes items with duplicate "text" field, leaving only one of them
- * @param {Array} matchesSet
- * @returns {Array}
+/*
+ *  Ensures following things:
+ *  - Only unique texts
+ *  - Only texts not listed as exceptions
+  * - Only strings appropriate for merging (means no quotes and other things able to make merging complicated)
  */
-const ensureUniqueness = matchesSet => {
-  const excludes = [];
-  return matchesSet.filter(item => {
-    const itemIsUnique = excludes.indexOf(item.text) === -1;
-    if (itemIsUnique) {
-      excludes.push(item.text);
-    }
-    return itemIsUnique;
-  });
+const filterSearchResults = (matches, word, excludes = []) => {
+  const matchesWithoutExcludes = matches.filter(item => !lodash.includes(excludes, item.text));
+  const uniqueItems = lodash.uniqBy(matchesWithoutExcludes, 'text');
+  return uniqueItems.filter(item => bullshitIsAppropriateForMerging(item.text, word));
 };
 
 /* ------------- Search for mergeable pair --------------   */
 const phraseCanBeLeftHalf = (phrase, word) => {
   Validate.phraseCanBeLeftHalf.input(phrase, word);
-  const regexp = new RegExp('^' + word, 'gi'),  //sure about g?
-      result = !phrase.match(regexp);
+  const regexp = new RegExp('^' + word, 'gi');  //sure about g?
+  const result = !phrase.match(regexp);
   Validate.phraseCanBeLeftHalf.output(result);
   return result;
 };
@@ -147,7 +142,7 @@ const getRightSentence =(variants, word, excludedVariants) => {
 const getPairToMerge = (phrasesArray, word) => {
   const leftSentence = getLeftSentence(phrasesArray, word);
   const rightSentence = leftSentence && getRightSentence(phrasesArray, word, [leftSentence]);
-  return (rightSentence && [leftSentence, rightSentence]) || null;
+  return rightSentence ? [leftSentence, rightSentence] : null;
 };
 
 /* ---------------------------------------------   */
@@ -181,9 +176,10 @@ const mergePhrases = (input, sharedWord) => {
 /*----------------------------------------------   */
 
 module.exports = {
-  filterSearchResults: filterSearchResults,
+  // TODO: export only methods used outside of this module, moving rest of them to separate unit
+  filterSearchResults,
   mergePair: mergePhrases,
-  getPairToMerge: getPairToMerge,
-  getMatchesSet: getMatchesSet,
-  getDecomposedString: getDecomposedString
+  getPairToMerge,
+  getMatchesSet,
+  getDecomposedString
 };

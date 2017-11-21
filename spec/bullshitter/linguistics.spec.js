@@ -4,6 +4,7 @@ import utilsMock from '../../src/utils/utils.mock';
 import Ling from '../../src/bullshitter/linguistics';
 import { Mocker } from '../helpers';
 
+// TODO: consider using mocked functions instead of referring to shared storage mock
 var storageMock = {
       getBullshitsContainingWord: function (word) {
         var result = [];

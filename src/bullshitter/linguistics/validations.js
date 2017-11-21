@@ -1,30 +1,34 @@
 import Assert from 'assert';
+import * as lodash from 'lodash';
+
+const { isString, isBoolean } = lodash;
 
 const validators = {
   mergePhrases: {
     input: (input, sharedWord) => {
       Assert(Array.isArray(input));
-      Assert(typeof input[0] === 'string');
-      Assert(typeof input[1] === 'string');
-      Assert(typeof sharedWord === 'string');
+      const [ firstPhrase, secondPhrase ] = input;
+      Assert(isString(firstPhrase));
+      Assert(isString(secondPhrase));
+      Assert(isString(sharedWord));
 
       const sharedWordRegexp = new RegExp(sharedWord, 'i');
-      Assert(input[0].match(sharedWordRegexp));
-      Assert(input[1].match(sharedWordRegexp));
+      Assert(firstPhrase.match(sharedWordRegexp));
+      Assert(secondPhrase.match(sharedWordRegexp));
 
     },
-    output: function (output) {
-      Assert(typeof output === 'string')
+    output: output => {
+      Assert(isString(output))
     }
   },
 
   phraseCanBeLeftHalf: {
     input: (phrase, word) => {
-      Assert(typeof phrase === "string"); // fails sometime
-      Assert(typeof word === "string")
+      Assert(isString(phrase)); // fails sometime
+      Assert(isString(word))
     },
     output: result => {
-      Assert(typeof result === 'boolean');
+      Assert(isBoolean(result));
     }
   }
 };

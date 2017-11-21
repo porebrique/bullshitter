@@ -4,6 +4,9 @@ import utilsMock from '../../src/utils/utils.mock';
 import Ling from '../../src/bullshitter/linguistics';
 import { Mocker } from '../helpers';
 
+// TODO: mock linguistic helpers
+
+
 // TODO: consider using mocked functions instead of referring to shared storage mock
 var storageMock = {
       getBullshitsContainingWord: function (word) {
@@ -55,45 +58,6 @@ describe('Linguistic module', function () {
     });
 
 
-  });
-
-  describe('search results', function() {
-    var searchResults = [
-      {text: 'One two three'},
-      {text: 'One two three'},
-      {text: 'One "two" three'},
-      {text: 'One " two " three'},
-      {text: 'One (two three)'},
-      {text: 'One (three two )'},
-      {text: 'One [two] three'},
-      {text: 'One «two» three'}
-    ];
-
-    it('dont include phrases when common word is surrounded by some symbols like quotes', function () {
-      var filteredResults = Ling.filterSearchResults(searchResults, [], 'two');
-      expect(filteredResults.length).toBe(1);
-    });
-  });
-
-  describe('getDecomposedString() method', function (){
-
-    it('decomposes input to single words', function () {
-      var string = '!One two-three,, "four". Five-six, seven! Eight?   Nine ?  ten.';
-      var expectedResult = [
-        'one',
-        'two-three',
-        'four',
-        'five-six',
-        'seven',
-        'eight',
-        'nine',
-        'ten'
-      ];
-      var result = Ling.getDecomposedString(string);
-      expectedResult.forEach(function(word, index) {
-        expect(result[index]).toBe(word);
-      });
-    });
   });
 
   describe('.getPairToMerge()', function () {

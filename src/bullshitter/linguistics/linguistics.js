@@ -2,22 +2,7 @@ import * as lodash from 'lodash';
 import utils from '../../utils/utils';
 import storage from '../storage/bullshit-storage.js';
 import Validate from './validations';
-
-/* ----------------------------------------------- */
-
-//TODO: consider excluding words like "and", an so on, as its hard to predict morphology of surrounding words
-/**
- * Decomposes given text to single words, stripped of punctuation
- * @param {String} inputText
- * @returns {Array}
- */
-const getDecomposedString = inputText => {
-  return inputText
-    .toLowerCase()
-    .replace(/[,.?!'"«»]/gi, '')
-    .replace(/\s+/gi, ' ')
-    .split(' ');
-};
+import helpers from './helpers';
 
 /* ----------------------------------------------- */
 
@@ -38,6 +23,7 @@ const getMatchesSet = (input, initialExcludes = []) => {
   // TODO: not sure if this optimization makes sense.
   // TODO consider changing signature to get obvious recursive flag. NB: isnt'it called from somewhere with not a string arg?
   const isInitialCall = lodash.isString(input);
+  const { getDecomposedString, filterSearchResults } = helpers;
   const decomposedInput = isInitialCall ? getDecomposedString(input) : input;
   const excludes = isInitialCall ? [input] : initialExcludes;
   const randomWord = utils.getRandomArrayElement(decomposedInput);
@@ -69,77 +55,8 @@ const getMatchesSet = (input, initialExcludes = []) => {
 
 };
 
-/**
- * Checks if given word is no surrounded by symbols that make impossible breaking phrase by this word.
- * @param {String} bullshit
- * @param {String} word
- * @returns {Bool}
- */
-const bullshitIsAppropriateForMerging = (bullshit, word) => {
-  const enclosingSymbols = [
-    ['\"', '\"'],
-    ['\\(', '\\)'],
-    ["\'", "\'"],
-    ['\\[', '\\]'],
-    ['«', '»']
-  ];
-  // TODO: change to filtering the array and checking its length. Could be simpler
-  // TODO: dont do this without tests
-  return enclosingSymbols.reduce((result, symbolsPair) => {
-    const [ openingSymbol, closingSymbol ] = symbolsPair;
-    const regexp = new RegExp(openingSymbol + '.*(' + word + ').*' + closingSymbol, 'gi');
-    const localMatch = !!bullshit.match(regexp);
-    return result && !localMatch;
-  }, true);
-};
-
-/*
- *  Ensures following things:
- *  - Only unique texts
- *  - Only texts not listed as exceptions
-  * - Only strings appropriate for merging (means no quotes and other things able to make merging complicated)
- */
-const filterSearchResults = (matches, word, excludes = []) => {
-  const matchesWithoutExcludes = matches.filter(item => !lodash.includes(excludes, item.text));
-  const uniqueItems = lodash.uniqBy(matchesWithoutExcludes, 'text');
-  return uniqueItems.filter(item => bullshitIsAppropriateForMerging(item.text, word));
-};
-
-/* ------------- Search for mergeable pair --------------   */
-const phraseCanBeLeftHalf = (phrase, word) => {
-  Validate.phraseCanBeLeftHalf.input(phrase, word);
-  const regexp = new RegExp('^' + word, 'gi');  //sure about g?
-  const result = !phrase.match(regexp);
-  Validate.phraseCanBeLeftHalf.output(result);
-  return result;
-};
-
-const phraseCanBeRightHalf = (phrase, word) => {
-  const regexp = new RegExp(word + '[.!?]*$', 'gi');  //sure about g?
-  return !phrase.match(regexp);
-};
-
-const getLeftSentence = (variants, word, excludedVariants) => {
-  let result = utils.getRandomArrayElement(variants, excludedVariants);
-  if (result && !phraseCanBeLeftHalf(result, word)) {
-      excludedVariants = excludedVariants ? excludedVariants : [];
-      excludedVariants.push(result);
-      result = getLeftSentence(variants, word, excludedVariants);
-  }
-  return result || null;
-};
-
-const getRightSentence =(variants, word, excludedVariants) => {
-  let result = utils.getRandomArrayElement(variants, excludedVariants);
-  if (result && !phraseCanBeRightHalf(result, word)) {
-    excludedVariants = excludedVariants ? excludedVariants : [];
-    excludedVariants.push(result);
-    result = getRightSentence(variants, word, excludedVariants);
-  }
-  return result;
-};
-
 const getPairToMerge = (phrasesArray, word) => {
+  const { getLeftSentence, getRightSentence } = helpers;
   const leftSentence = getLeftSentence(phrasesArray, word);
   const rightSentence = leftSentence && getRightSentence(phrasesArray, word, [leftSentence]);
   return rightSentence ? [leftSentence, rightSentence] : null;
@@ -176,10 +93,7 @@ const mergePhrases = (input, sharedWord) => {
 /*----------------------------------------------   */
 
 module.exports = {
-  // TODO: export only methods used outside of this module, moving rest of them to separate unit
-  filterSearchResults,
   mergePair: mergePhrases,
   getPairToMerge,
-  getMatchesSet,
-  getDecomposedString
+  getMatchesSet
 };

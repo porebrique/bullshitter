@@ -1,5 +1,6 @@
 import MessageProcessor from '../src/message-processor';
 import bullshitter from '../src/bullshitter';
+import Message from '../src/message';
 import settings from '../settings';
 import { Mocker } from './helpers';
 
@@ -30,19 +31,9 @@ describe('MessageProcessor', function (){
 
   var bot = {};
 
-  it("Knows how to removes bot's names from message", function () {
-    const matchTable = [
-          ['botname, hello','hello'],
-          ['botname hello', 'hello'],
-          ['botnameololo', 'botnameololo'],
-          ['botname, botname', 'botname'],
-          ['botname', ''],
-          ['notname, hello', 'notname, hello'],
-          ['hey, botname', 'hey, botname']
-        ];
-    matchTable.map(function (pair) {
-      expect(processor.removeBotMentions(pair[0])).toBe(pair[1]);
-    });
+  it('.getMessage returns an instance of Message', () => {
+    const wrappedMessage = processor.getMessage({});
+    expect(wrappedMessage instanceof  Message);
   });
 
   describe('.isTimeToSayRandomly', () => {
@@ -81,24 +72,28 @@ describe('MessageProcessor', function (){
   });
 
   describe('.processMessage', () => {
-    const generalMessage = { text: 'hello world' };
-    const command = { text: '/hello world' };
+    const message = {};
+    const wrappedMessage = new Message({}, {});
 
     beforeEach(() => {
       processor.processCommand = jest.fn();
       processor.processGeneralMessage = jest.fn();
+      processor.getMessage = () => wrappedMessage;
     });
 
     it('processes message as command when is supposed to', () => {
-      processor.processMessage(generalMessage);
-      expect(processor.processCommand).not.toHaveBeenCalled();
-      expect(processor.processGeneralMessage).toHaveBeenCalled();
+      wrappedMessage.isCommand = () => true;
+      processor.processMessage(message);
+      // TODO: later an argument should be not original message, but a class' instance
+      expect(processor.processCommand).toHaveBeenCalledWith(message);
+      expect(processor.processGeneralMessage).not.toHaveBeenCalled();
     });
 
     it('processes message as generic message when is supposed to', () => {
-      processor.processMessage(command);
-      expect(processor.processCommand).toHaveBeenCalled();
-      expect(processor.processGeneralMessage).not.toHaveBeenCalled();
+      wrappedMessage.isCommand = () => false;
+      processor.processMessage(message);
+      expect(processor.processCommand).not.toHaveBeenCalled();
+      expect(processor.processGeneralMessage).toHaveBeenCalledWith(wrappedMessage);
     });
   });
 
@@ -134,72 +129,28 @@ describe('MessageProcessor', function (){
 
   });
 
-  describe('.sayRandomShit', () => {
-    const msg = { text: 'oh hai' };
-
-    it('tries to generate bullshit from message text cleared from bot\'s mentions', () => {
-      processor.getBullshit = jest.fn();
-      processor.removeBotMentions = text => text.replace('bot', '').trim();
-      const msg = { text: 'bot hello' };
-      processor.sayRandomShit(msg);
-      expect(processor.getBullshit).toHaveBeenCalledWith('hello');
-    });
-
-    it('if bullshit was generated, returns it', () => {
-      processor.getBullshit = text => text;
-      expect(processor.sayRandomShit(msg)).toBe('oh hai');
-    });
-
-    it('if bullshit was not generated, returns null', () => {
-      processor.getBullshit = () => '';
-      expect(processor.sayRandomShit(msg)).toBe(null);
-    });
-
-  });
-
-  describe('.isSaidToBot', () => {
-
-    it('knows when message is addressed to bot', () => {
-      const messages= [
-        'botname, hello',
-        'BotName, hello',
-        'otherbotname, hello'
-      ];
-      messages.forEach(msg => {
-        expect(processor.isSaidToBot(msg)).toBe(true);
-      });
-    });
-    it('knows when message is NOT addressed to bot', () => {
-      const messages= [
-        'Someguy, hello',
-        'hello, botname'
-      ];
-      messages.forEach(msg => {
-        expect(processor.isSaidToBot(msg)).toBe(false);
-      });
-    });
-  });
-
   describe('.processGeneralMessage', () => {
     const chatId = 'chatId';
-    const message =  { text: 'hello', chat: { id: chatId } };
+    const message = new Message({ text: 'hello', chat: { id: chatId } }, {});
     const expectedResult = 'hello reply';
 
     beforeEach(() => {
-      processor.sayRandomShit = msg => `${msg.text} reply`;
+      processor.getBullshit = text => `${text} reply`;
+      message.getText = () => 'hello';
+      message.getChatId = () => chatId;
       processor.sendMessage = jest.fn();
     });
 
     describe('sends a reply', () => {
       it('if message was addressed to bot', () => {
-        processor.isSaidToBot = () => true;
+        message.isSaidToBot = () => true;
         processor.constructor.isTimeToSayRandomly = () => false;
         processor.processGeneralMessage(message);
         expect(processor.sendMessage).toHaveBeenCalledWith(chatId, expectedResult);
       });
 
       it('it is time to say random phrase', () => {
-        processor.isSaidToBot = () => false;
+        message.isSaidToBot = () => false;
         processor.constructor.isTimeToSayRandomly = () => true;
         processor.processGeneralMessage(message);
         expect(processor.sendMessage).toHaveBeenCalledWith(chatId, expectedResult);
@@ -209,7 +160,7 @@ describe('MessageProcessor', function (){
 
     describe('doesn\'t send a reply', () => {
       it('if message was not addressed to bot and it is not a time to talk randomly', () => {
-        processor.isSaidToBot = () => false;
+        message.isSaidToBot = () => false;
         processor.constructor.isTimeToSayRandomly = () => false;
         processor.processGeneralMessage(message);
         expect(processor.sendMessage).not.toHaveBeenCalled();

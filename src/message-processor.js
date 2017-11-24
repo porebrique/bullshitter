@@ -2,6 +2,7 @@ import CommandProcessor from './command-processor';
 import bullshitter from './bullshitter';
 import settings from '../settings';
 import { bind } from './utils';
+import Message from './message';
 
 export default class MessageProcessor {
 
@@ -11,27 +12,15 @@ export default class MessageProcessor {
     return chance > random;
   }
 
-  /**
-   * Returns regexp matching any of bot's names followed by space, or comma, or end of string.
-   * @returns {RegExp}
-   */
-  static getBotMentionRegexp () {
-    const namesJoined = settings.names.map(name => `(${name})`).join('|');
-    return new RegExp(`^(${namesJoined})(\\s|,|$)`, 'i');
-  }
-
   constructor(bot) {
     this.bot = bot;
     this.bot.settings = settings;
     this.commandProcessor = new CommandProcessor(bot);
-    // Every message is being checked if it is said to bot.
-    // To avoid constant re-calculating, lets generate and store required regexp once.
-    this.bot.botMentionsRegexp = this.constructor.getBotMentionRegexp();
 
     bind([
+      'getMessage',
       'processMessage',
       'processCommand',
-      'sayRandomShit',
       'processGeneralMessage'
     ]).to(this);
   }
@@ -40,21 +29,40 @@ export default class MessageProcessor {
     return bullshitter.getBullshit(text);
   }
 
+  getMessage(msg) {
+    const messageOptions = [
+      msg,
+      { botNames: this.bot.settings.names }
+    ];
+    return new Message(...messageOptions);
+  }
+
   sendMessage (aChatId, aMessage) {
     this.bot.sendMessage(aChatId, aMessage);
   }
 
+  /**
+   * Processes message as general message or as a command
+   * @param {Object} msg message object received from API
+   */
   processMessage (msg) {
-    if (msg.text.startsWith('/')) {
+    const message = this.getMessage(msg);
+    const isCommand = message.isCommand();
+    // TODO: replace msg with message but be cautious with nested methods
+    if (isCommand) {
       this.processCommand(msg);
     } else {
-      this.processGeneralMessage(msg);
+      this.processGeneralMessage(message);
     }
   }
 
 
   // TODO consider avoiding ifs inside swtich.
   // Maybe commandProcessor should perform action itself and return only result?
+  /**
+   *
+   * @param {Object} msg message object received from API
+   */
   processCommand (msg) {
     const reactionToCommand = this.commandProcessor.getReactionToCommand(msg);
 
@@ -74,37 +82,18 @@ export default class MessageProcessor {
     }
   }
 
-  sayRandomShit (msg) {
-    const result = this.getBullshit(this.removeBotMentions(msg.text));
-    return result || null;
-  }
-
-  removeBotMentions (messageText) {
-    const { botMentionsRegexp } = this.bot;
-    return messageText.replace(botMentionsRegexp, '').trim();
-  }
-
-// TODO: somehow combine with removeBotMentions for avoiding second iteration
-  isSaidToBot (messageText) {
-    const lowercasedMessage = messageText.toLowerCase();
-    let messageIsForBot = false;
-
-    this.bot.settings.names.map(botName => {
-      if (lowercasedMessage.indexOf(botName.toLocaleLowerCase()) === 0) {
-        messageIsForBot = true;
-      }
-    });
-    return messageIsForBot;
-  }
-
+  /**
+   *
+   * @param {Message} msg  instance of Message class
+   */
   processGeneralMessage (msg) {
-    const isSaidToBot = this.isSaidToBot(msg.text);
+    const isSaidToBot = msg.isSaidToBot();
     const isTimeToSayRandomly = this.constructor.isTimeToSayRandomly();
     const isReplyRequired = isSaidToBot || isTimeToSayRandomly;
 
     if (isReplyRequired) {
-      const resultMessage = this.sayRandomShit(msg);
-      this.sendMessage(msg.chat.id, resultMessage);
+      const resultMessage = this.getBullshit(msg.getText());
+      this.sendMessage(msg.getChatId(), resultMessage);
     }
   }
 }

@@ -27,7 +27,6 @@ export default class MessageProcessor {
     // Every message is being checked if it is said to bot.
     // To avoid constant re-calculating, lets generate and store required regexp once.
     this.bot.botMentionsRegexp = this.constructor.getBotMentionRegexp();
-    console.log('this.bot.botMentionsRegexp:', this.bot.botMentionsRegexp);
 
     bind([
       'processMessage',
@@ -35,6 +34,10 @@ export default class MessageProcessor {
       'sayRandomShit',
       'processGeneralMessage'
     ]).to(this);
+  }
+
+  getBullshit(text) {
+    return bullshitter.getBullshit(text);
   }
 
   sendMessage (aChatId, aMessage) {
@@ -72,7 +75,7 @@ export default class MessageProcessor {
   }
 
   sayRandomShit (msg) {
-    const result = bullshitter.getBullshit(this.removeBotMentions(msg.text));
+    const result = this.getBullshit(this.removeBotMentions(msg.text));
     return result || null;
   }
 

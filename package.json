@@ -1,6 +1,6 @@
 {
   "name": "Bullshitter",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Telegram bot able to response in crazy but usually relevant way",
   "main": "index.js",
   "dependencies": {

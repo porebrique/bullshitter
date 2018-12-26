@@ -7,7 +7,7 @@ var loki = require('lokijs'),
 db.loadDatabase();
 
 
-const MAX_BULLSHIT_LENGTH = 1000,
+const MAX_BULLSHIT_LENGTH = 300,
   MAX_GENERATED_BULLSHIT_COLLECTION = 100;
 
 /**

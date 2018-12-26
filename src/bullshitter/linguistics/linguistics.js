@@ -4,6 +4,13 @@ import storage from '../storage/bullshit-storage.js';
 import Validate from './validations';
 import helpers from './helpers';
 
+const {
+    getLeftSentence,
+    getRightSentence,
+    getDecomposedString,
+    filterSearchResults
+} = helpers;
+
 /* ----------------------------------------------- */
 
 //TODO: search must not be performed for words inside (), "", [], «», etc, in BOTH phrases (now it is done for DB phrases only)
@@ -23,7 +30,6 @@ const getMatchesSet = (input, initialExcludes = []) => {
   // TODO: not sure if this optimization makes sense.
   // TODO consider changing signature to get obvious recursive flag. NB: isnt'it called from somewhere with not a string arg?
   const isInitialCall = lodash.isString(input);
-  const { getDecomposedString, filterSearchResults } = helpers;
   const decomposedInput = isInitialCall ? getDecomposedString(input) : input;
   const excludes = isInitialCall ? [input] : initialExcludes;
   const randomWord = utils.getRandomArrayElement(decomposedInput);
@@ -56,7 +62,6 @@ const getMatchesSet = (input, initialExcludes = []) => {
 };
 
 const getPairToMerge = (phrasesArray, word) => {
-  const { getLeftSentence, getRightSentence } = helpers;
   const leftSentence = getLeftSentence(phrasesArray, word);
   const rightSentence = leftSentence && getRightSentence(phrasesArray, word, [leftSentence]);
   return rightSentence ? [leftSentence, rightSentence] : null;

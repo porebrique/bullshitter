@@ -1,8 +1,8 @@
 import Linguistics from "./linguistics/index";
 
 const removeWhitespacesBeforePunctuation = sString => sString.replace(/(\s)([,.?!]+)/g, '$2');
-const CapitalizeWholePhrase = sString => sString.charAt(0).toUpperCase() + sString.slice(1);
-const transformOutput = bullshitText => CapitalizeWholePhrase(removeWhitespacesBeforePunctuation(bullshitText));
+const capitalizeWholePhrase = sString => sString.charAt(0).toUpperCase() + sString.slice(1);
+const transformOutput = bullshitText => capitalizeWholePhrase(removeWhitespacesBeforePunctuation(bullshitText));
 
 const extractStringsFromDBItems = input => input.map(item => item.text);
 
@@ -15,6 +15,7 @@ const mergeSomethingFromArray = (aStrings, word) => {
   return mergeablePair && Linguistics.mergePair(mergeablePair, word);
 };
 
+// TODO: it merges not considering having initial matching word in a result
 /**
  * Tries to merge received phrase with some other from base.
  * If phrase does not have any matches to stored items by any word
@@ -27,7 +28,10 @@ const mergeSomethingWith = input => {
     return null;
   }
   // TODO: Why adding input?
-  const extractedPhrases = extractStringsFromDBItems(matches).concat([input]);
+  const extractedPhrases = [
+    ...extractStringsFromDBItems(matches),
+    input
+  ];
   return mergeSomethingFromArray(extractedPhrases, word);
 };
 

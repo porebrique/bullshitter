@@ -11,37 +11,38 @@ import {
 
 const getBullshit = input => {
   const { matches, word } = Linguistics.getMatchesSet(input); // could be 0, 1 or many
-  let bullshitToSave;
-  let bullshitToSay;
+  let bullshit;
+  let shouldSave;
 
   switch (matches.length) {
     case 0:
-      bullshitToSay = mergeSomethingWith(BullshitStorage.getRandomBullshit());
+      bullshit = mergeSomethingWith(BullshitStorage.getRandomBullshit());
       break;
     case 1:
-      bullshitToSay = mergeSomethingWith(matches[0].text);
-      if (!bullshitToSay) {
+      const [ singleMatch ] = matches;
+      bullshit = mergeSomethingWith(singleMatch.text);
+      if (!bullshit) {
         // If cant merge with anything (when phrase doesnt have shared words with any record from db) then get random
-        bullshitToSay = matches[0].text;
-      } else if (bullshitToSay.indexOf(word) !== -1) {
+        bullshit = singleMatch.text;
+      } else if (bullshit.includes(word)) {
         // TODO: is it even possible for bullshitToSay to not contain WORD? If yes, how is it valid?
         // if something was merged, save result, but only if it has something in common with input
-        bullshitToSave = bullshitToSay;
+        shouldSave = true;
       }
 
       break;
     default:
       const extractedPhrases = extractStringsFromDBItems(matches);
-      bullshitToSay = bullshitToSave = mergeSomethingFromArray(extractedPhrases, word);
+      bullshit = mergeSomethingFromArray(extractedPhrases, word);
+      shouldSave = true;
       break;
   }
 
-  if (bullshitToSave) {
-    BullshitStorage.saveBullshit(bullshitToSave);
+  if (shouldSave && bullshit) {
+    BullshitStorage.saveBullshit(bullshit);
   }
 
-  // TODO: Not sure if code after || is ever called)
-  return transformOutput(bullshitToSay || BullshitStorage.getRandomBullshit());
+  return transformOutput(bullshit || BullshitStorage.getRandomBullshit());
 };
 
 export {

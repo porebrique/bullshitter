@@ -76,6 +76,8 @@ function getBullshitCollection() {
   return db.getCollection('bullshit') || db.addCollection('bullshit');
 }
 
+// TODO: add to non-original db records a list of inclusionIds ($loki),
+// used to combine the phrase
 /**
  * Saves to database the received text (if it is possible)
  * @param {String} bullshit
